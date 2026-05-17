@@ -27,6 +27,7 @@ export function Navbar() {
           <Link href="/products" onClick={() => setIsOpen(false)}>Products</Link>
           <Link href="/price-list" onClick={() => setIsOpen(false)}>Price List</Link>
           <Link href="/about" onClick={() => setIsOpen(false)}>About</Link>
+          <Link href="/orders" onClick={() => setIsOpen(false)}>Orders</Link>
         </nav>
         
         <div className="nav-actions">

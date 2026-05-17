@@ -11,6 +11,7 @@ model Product {
   id          String   @id @default(cuid())
   name        String
   price       Float
+  discount    Int      @default(0) // Discount percentage (0-100)
   type        String
   imagePath   String?
   stock       Int      @default(0)
@@ -20,30 +21,34 @@ model Product {
 }
 
 model Order {
-  id          String      @id @default(cuid())
-  fullName    String
-  city        String
-  district    String
-  pinCode     String
-  phoneNumber String
-  areaName    String
-  totalAmount Float
-  paymentMethod String   @default("COD")
-  paymentStatus String   @default("PENDING")
-  utrNumber     String?
-  status      String     @default("PENDING") // PENDING, CONFIRMED, SHIPPED, DELIVERED
-  createdAt   DateTime   @default(now())
-  items       OrderItem[]
+  id              String      @id @default(cuid())
+  fullName        String
+  city            String
+  district        String
+  pinCode         String
+  phoneNumber     String
+  areaName        String
+  totalAmount     Float
+  discountAmount  Float       @default(0)
+  paymentMethod   String      @default("COD")
+  paymentStatus   String      @default("PENDING")
+  utrNumber       String?
+  status          String      @default("PENDING")
+  cancelReason    String?
+  createdAt       DateTime    @default(now())
+  items           OrderItem[]
 }
 
 model OrderItem {
-  id        String  @id @default(cuid())
-  orderId   String
-  productId String
-  quantity  Int
-  price     Float   // Price at the time of purchase
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product   Product @relation(fields: [productId], references: [id])
+  id          String  @id @default(cuid())
+  orderId     String
+  productId   String
+  productName String  @default("")
+  quantity    Int
+  price       Float
+  discount    Int     @default(0)
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product @relation(fields: [productId], references: [id])
 }
 
 model Admin {
@@ -54,7 +59,15 @@ model Admin {
 }
 
 model SiteSettings {
-  id         String   @id @default("global")
-  heroImage  String?
-  updatedAt  DateTime @updatedAt
+  id              String   @id @default("global")
+  heroImage       String?
+  globalDiscount  Int      @default(0)
+  updatedAt       DateTime @updatedAt
+}
+
+model HeroSlide {
+  id        String   @id @default(cuid())
+  imagePath String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
 }

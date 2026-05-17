@@ -1,5 +1,6 @@
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
+import { CursorSparkle } from '@/components/CursorSparkle'
 import './globals.css'
 import type { Metadata } from 'next'
 import { Outfit, Inter } from 'next/font/google'
@@ -20,6 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${outfit.variable}`}>
+        <CursorSparkle />
         <Navbar />
         {children}
         <Footer />

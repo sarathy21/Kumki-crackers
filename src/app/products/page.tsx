@@ -8,6 +8,9 @@ export default async function ProductsPage() {
     orderBy: { createdAt: 'desc' }
   })
 
+  const settings = await prisma.siteSettings.findUnique({ where: { id: 'global' } })
+  const globalDiscount = settings?.globalDiscount ?? 0
+
   return (
     <main>
       <section style={{ textAlign: 'center', padding: '3rem 1rem', marginBottom: '1rem' }}>
@@ -17,7 +20,7 @@ export default async function ProductsPage() {
         </p>
       </section>
       
-      <ProductGrid initialProducts={products} />
+      <ProductGrid initialProducts={products} globalDiscount={globalDiscount} />
     </main>
   )
 }

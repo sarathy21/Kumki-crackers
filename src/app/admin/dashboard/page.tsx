@@ -8,5 +8,30 @@ export default async function AdminProducts() {
     orderBy: { createdAt: 'desc' }
   })
 
-  return <AdminProductManager products={products} />
+  const heroSlides = await prisma.heroSlide.findMany({
+    orderBy: { sortOrder: 'asc' }
+  })
+
+  const settings = await prisma.siteSettings.findUnique({
+    where: { id: 'global' }
+  })
+
+  const globalDiscount = settings?.globalDiscount ?? 0
+
+  // Monthly stats
+  const now = new Date()
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+  
+  const monthlyOrders = await prisma.order.findMany({
+    where: { createdAt: { gte: startOfMonth } }
+  })
+
+  const stats = {
+    totalOrders: monthlyOrders.length,
+    monthlyRevenue: monthlyOrders.reduce((sum, o) => sum + o.totalAmount, 0),
+    totalProducts: products.length,
+    pendingOrders: monthlyOrders.filter(o => o.status === 'PENDING').length
+  }
+
+  return <AdminProductManager products={products} heroSlides={heroSlides} stats={stats} globalDiscount={globalDiscount} />
 }

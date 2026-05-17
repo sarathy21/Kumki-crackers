@@ -9,6 +9,7 @@ type Product = {
   id: string
   name: string
   price: number
+  stock: number
   type: string
   imagePath: string | null
 }
@@ -25,7 +26,11 @@ const CATEGORIES = [
   'Fancy Shower'
 ]
 
-export function ProductGrid({ initialProducts }: { initialProducts: Product[] }) {
+function getDiscountedPrice(price: number, discount: number) {
+  return discount > 0 ? price - (price * discount / 100) : price
+}
+
+export function ProductGrid({ initialProducts, globalDiscount = 0 }: { initialProducts: Product[], globalDiscount?: number }) {
   const [filter, setFilter] = useState('All')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
@@ -37,7 +42,6 @@ export function ProductGrid({ initialProducts }: { initialProducts: Product[] })
     return matchesFilter && matchesSearch
   })
 
-  // Prevent scrolling when modal is open
   useEffect(() => {
     if (selectedProduct) {
       document.body.style.overflow = 'hidden'
@@ -49,12 +53,7 @@ export function ProductGrid({ initialProducts }: { initialProducts: Product[] })
 
   const container = {
     hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
+    show: { opacity: 1, transition: { staggerChildren: 0.1 } }
   }
 
   const itemVariant = {
@@ -93,120 +92,126 @@ export function ProductGrid({ initialProducts }: { initialProducts: Product[] })
         initial="hidden"
         animate="show"
         layout 
-        style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', 
-          gap: '2rem' 
-        }}
+        style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '2rem' }}
       >
         <AnimatePresence>
-          {filteredProducts.map(product => (
-            <motion.div
-              key={product.id}
-              variants={itemVariant}
-              layoutId={`card-${product.id}`}
-              exit={{ opacity: 0, scale: 0.9 }}
-              whileHover={{ y: -5, boxShadow: 'var(--shadow-glow)' }}
-              transition={{ duration: 0.2 }}
-              onClick={() => setSelectedProduct(product)}
-              className="glass-panel"
-              style={{ 
-                padding: '1.5rem', 
-                borderRadius: '1rem', 
-                display: 'flex', 
-                flexDirection: 'column',
-                cursor: 'pointer'
-              }}
-            >
-              <div style={{ height: '150px', background: 'var(--surface-hover)', borderRadius: '0.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                {product.imagePath ? (
-                  <img src={product.imagePath} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <span style={{ color: 'var(--text-muted)' }}>No Image</span>
+          {filteredProducts.map(product => {
+            const discountedPrice = getDiscountedPrice(product.price, globalDiscount)
+            return (
+              <motion.div
+                key={product.id}
+                variants={itemVariant}
+                layoutId={`card-${product.id}`}
+                exit={{ opacity: 0, scale: 0.9 }}
+                whileHover={product.stock > 0 ? { y: -5, boxShadow: 'var(--shadow-glow)' } : {}}
+                transition={{ duration: 0.2 }}
+                onClick={() => product.stock > 0 && setSelectedProduct(product)}
+                className="glass-panel"
+                style={{ padding: '1.5rem', borderRadius: '1rem', display: 'flex', flexDirection: 'column', cursor: product.stock > 0 ? 'pointer' : 'not-allowed', position: 'relative', opacity: product.stock === 0 ? 0.5 : 1 }}
+              >
+                {product.stock === 0 && (
+                  <div style={{ position: 'absolute', top: '0.75rem', left: '0.75rem', background: '#DC2626', color: '#fff', padding: '0.25rem 0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 'bold', zIndex: 1 }}>
+                    Out of Stock
+                  </div>
                 )}
-              </div>
-              <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>{product.name}</h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>{product.type}</p>
-              
-              <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span className="glow-text" style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>₹{product.price.toFixed(2)}</span>
-                <div style={{ color: 'var(--primary)', fontWeight: 'bold' }}>View Details &rarr;</div>
-              </div>
-            </motion.div>
-          ))}
+                {product.stock > 0 && product.stock <= 20 && (
+                  <div style={{ position: 'absolute', top: '0.75rem', left: '0.75rem', background: '#F59E0B', color: '#fff', padding: '0.25rem 0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 'bold', zIndex: 1 }}>
+                    Only {product.stock} left!
+                  </div>
+                )}
+                {globalDiscount > 0 && (
+                  <div style={{ position: 'absolute', top: '0.75rem', right: '0.75rem', background: '#D4450B', color: '#fff', padding: '0.25rem 0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 'bold', zIndex: 1 }}>
+                    {globalDiscount}% OFF
+                  </div>
+                )}
+                <div style={{ height: '150px', background: 'var(--surface-hover)', borderRadius: '0.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                  {product.imagePath ? (
+                    <img src={product.imagePath} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <span style={{ color: 'var(--text-muted)' }}>No Image</span>
+                  )}
+                </div>
+                <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>{product.name}</h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>{product.type}</p>
+                
+                <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    {globalDiscount > 0 ? (
+                      <>
+                        <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '0.9rem', marginRight: '0.5rem' }}>₹{product.price.toFixed(2)}</span>
+                        <span className="glow-text" style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>₹{discountedPrice.toFixed(2)}</span>
+                      </>
+                    ) : (
+                      <span className="glow-text" style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>₹{product.price.toFixed(2)}</span>
+                    )}
+                  </div>
+                  <div style={{ color: product.stock > 0 ? 'var(--primary)' : 'var(--text-muted)', fontWeight: 'bold', fontSize: '0.85rem' }}>{product.stock > 0 ? 'View →' : 'Unavailable'}</div>
+                </div>
+              </motion.div>
+            )
+          })}
         </AnimatePresence>
       </motion.div>
 
-      {/* Modal overlay */}
+      {/* Product Detail Modal */}
       <AnimatePresence>
-        {selectedProduct && (
-          <div style={{
-            position: 'fixed',
-            top: 0, left: 0, right: 0, bottom: 0,
-            zIndex: 9999,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: 'rgba(0,0,0,0.5)',
-            backdropFilter: 'blur(4px)',
-            padding: '1rem'
-          }}>
-            <motion.div
-              layoutId={`card-${selectedProduct.id}`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              style={{
-                background: 'var(--surface)',
-                borderRadius: '1.5rem',
-                padding: '2rem',
-                width: '100%',
-                maxWidth: '500px',
-                position: 'relative',
-                boxShadow: 'var(--shadow-glow-strong)'
-              }}
-            >
-              <button 
-                onClick={() => setSelectedProduct(null)}
-                style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'transparent', color: 'var(--text-muted)' }}
+        {selectedProduct && (() => {
+          const discountedPrice = getDiscountedPrice(selectedProduct.price, globalDiscount)
+          return (
+            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', padding: '1rem' }}>
+              <motion.div
+                layoutId={`card-${selectedProduct.id}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                style={{ background: 'var(--bg-color)', borderRadius: '1.5rem', padding: '2rem', width: '100%', maxWidth: '500px', position: 'relative', boxShadow: 'var(--shadow-glow-strong)', border: '1px solid var(--border)' }}
               >
-                <X size={24} />
-              </button>
-              
-              <div style={{ height: '250px', background: 'var(--surface-hover)', borderRadius: '1rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                {selectedProduct.imagePath ? (
-                  <img src={selectedProduct.imagePath} alt={selectedProduct.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                ) : (
-                  <span style={{ color: 'var(--text-muted)' }}>No Image Available</span>
-                )}
-              </div>
-
-              <h2 style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>{selectedProduct.name}</h2>
-              <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '1.5rem' }}>Category: {selectedProduct.type}</p>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
-                <div>
-                  <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Price</div>
-                  <div className="glow-text" style={{ fontSize: '1.8rem', fontWeight: 'bold' }}>₹{selectedProduct.price.toFixed(2)}</div>
-                </div>
-                
-                <button 
-                  onClick={() => {
-                    addItem({ ...selectedProduct, quantity: 1 })
-                    setSelectedProduct(null)
-                    triggerSkyShot()
-                  }}
-                  className="btn-primary"
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem' }}
-                >
-                  <ShoppingCart size={20} /> Add to Cart
+                <button onClick={() => setSelectedProduct(null)} style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'transparent', color: 'var(--text-muted)' }}>
+                  <X size={24} />
                 </button>
-              </div>
-            </motion.div>
-            <div 
-              style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: -1 }} 
-              onClick={() => setSelectedProduct(null)}
-            />
-          </div>
-        )}
+                
+                <div style={{ height: '250px', background: 'var(--surface-hover)', borderRadius: '1rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                  {selectedProduct.imagePath ? (
+                    <img src={selectedProduct.imagePath} alt={selectedProduct.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                  ) : (
+                    <span style={{ color: 'var(--text-muted)' }}>No Image Available</span>
+                  )}
+                </div>
+
+                <h2 style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>{selectedProduct.name}</h2>
+                <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '1.5rem' }}>Category: {selectedProduct.type}</p>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
+                  <div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Price</div>
+                    {globalDiscount > 0 ? (
+                      <>
+                        <div style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '1rem' }}>₹{selectedProduct.price.toFixed(2)}</div>
+                        <div className="glow-text" style={{ fontSize: '1.8rem', fontWeight: 'bold' }}>₹{discountedPrice.toFixed(2)}</div>
+                        <div style={{ background: '#D4450B', color: '#fff', padding: '0.15rem 0.4rem', borderRadius: '0.25rem', fontSize: '0.75rem', fontWeight: 'bold', display: 'inline-block', marginTop: '0.25rem' }}>{globalDiscount}% OFF</div>
+                      </>
+                    ) : (
+                      <div className="glow-text" style={{ fontSize: '1.8rem', fontWeight: 'bold' }}>₹{selectedProduct.price.toFixed(2)}</div>
+                    )}
+                  </div>
+                  
+                  <button 
+                    onClick={() => {
+                      addItem({ ...selectedProduct, price: discountedPrice, quantity: 1 })
+                      setSelectedProduct(null)
+                      triggerSkyShot()
+                    }}
+                    className="btn-primary"
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem' }}
+                  >
+                    <ShoppingCart size={20} /> Add to Cart
+                  </button>
+                </div>
+              </motion.div>
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: -1 }} onClick={() => setSelectedProduct(null)} />
+            </div>
+          )
+        })()}
       </AnimatePresence>
 
       {filteredProducts.length === 0 && (
