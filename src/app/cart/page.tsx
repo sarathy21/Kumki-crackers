@@ -105,7 +105,7 @@ export default function CartPage() {
   const upiLink = `upi://pay?pa=${upiId}&pn=${payeeName}&am=${amount}&cu=INR`
 
   return (
-    <main className="container" style={{ padding: '2rem 1.5rem', display: 'grid', gridTemplateColumns: items.length > 0 ? '1fr 350px' : '1fr', gap: '2rem', minHeight: '70vh' }}>
+    <main className={`container ${items.length > 0 ? 'cart-grid' : ''}`} style={{ padding: '2rem 0', minHeight: '70vh' }}>
       
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         <h2 className="glow-text">Your Cart</h2>
@@ -118,23 +118,25 @@ export default function CartPage() {
         ) : (
           <div className="glass-panel" style={{ borderRadius: '1rem', overflow: 'hidden' }}>
             {items.map((item) => (
-              <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', padding: '1.5rem', borderBottom: '1px solid var(--border)' }}>
-                <div style={{ width: '80px', height: '80px', background: 'var(--surface-hover)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+              <div key={item.id} className="cart-item">
+                <div className="cart-item-image" style={{ background: 'var(--surface-hover)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                   {item.imagePath ? <img src={item.imagePath} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <span style={{fontSize:'0.7rem', color:'var(--text-muted)'}}>No img</span>}
                 </div>
-                <div style={{ flex: 1 }}>
+                <div className="cart-item-details">
                   <h4 style={{ marginBottom: '0.25rem' }}>{item.name}</h4>
                   <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{item.type}</div>
                   <div className="glow-text" style={{ fontWeight: 'bold', marginTop: '0.25rem' }}>₹{item.price.toFixed(2)}</div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--surface-hover)', padding: '0.25rem', borderRadius: '2rem' }}>
-                  <button type="button" onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))} style={{ padding: '0.5rem', background: 'transparent', color: 'var(--text-main)' }}><Minus size={16} /></button>
-                  <span style={{ minWidth: '1.5rem', textAlign: 'center' }}>{item.quantity}</span>
-                  <button type="button" onClick={() => updateQuantity(item.id, item.quantity + 1)} style={{ padding: '0.5rem', background: 'transparent', color: 'var(--text-main)' }}><Plus size={16} /></button>
+                <div className="cart-item-actions">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--surface-hover)', padding: '0.25rem', borderRadius: '2rem' }}>
+                    <button type="button" onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))} style={{ padding: '0.5rem', background: 'transparent', color: 'var(--text-main)' }}><Minus size={16} /></button>
+                    <span style={{ minWidth: '1.5rem', textAlign: 'center' }}>{item.quantity}</span>
+                    <button type="button" onClick={() => updateQuantity(item.id, item.quantity + 1)} style={{ padding: '0.5rem', background: 'transparent', color: 'var(--text-main)' }}><Plus size={16} /></button>
+                  </div>
+                  <button type="button" onClick={() => removeItem(item.id)} style={{ padding: '0.5rem', background: 'rgba(212,69,11,0.1)', color: 'var(--secondary)', borderRadius: '0.5rem' }}>
+                    <Trash2 size={20} />
+                  </button>
                 </div>
-                <button type="button" onClick={() => removeItem(item.id)} style={{ padding: '0.5rem', background: 'rgba(212,69,11,0.1)', color: 'var(--secondary)', borderRadius: '0.5rem' }}>
-                  <Trash2 size={20} />
-                </button>
               </div>
             ))}
             <div style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-hover)' }}>

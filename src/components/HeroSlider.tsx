@@ -24,17 +24,7 @@ export function HeroSlider({ slides }: { slides: Slide[] }) {
 
   return (
     <div className="container" style={{ marginBottom: '3rem' }}>
-      <div style={{
-        position: 'relative',
-        width: '100%',
-        maxWidth: '1200px',
-        margin: '0 auto',
-        borderRadius: '1rem',
-        overflow: 'hidden',
-        border: '1px solid var(--border)',
-        boxShadow: 'var(--shadow-glow)',
-        aspectRatio: '16/6'
-      }}>
+      <div className="hero-slider-box">
         <AnimatePresence mode="wait">
           <motion.img
             key={slides[current].id}

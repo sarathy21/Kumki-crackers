@@ -73,13 +73,13 @@ export function ProductGrid({ initialProducts, globalDiscount = 0 }: { initialPr
           style={{ maxWidth: '500px', margin: '0 auto' }}
         />
         
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
+        <div className="category-slider">
           {CATEGORIES.map(cat => (
             <button
               key={cat}
               onClick={() => setFilter(cat)}
               className={filter === cat ? 'btn-primary' : 'btn-outline'}
-              style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', borderRadius: '2rem' }}
+              style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', borderRadius: '2rem', flexShrink: 0 }}
             >
               {cat}
             </button>
@@ -92,7 +92,7 @@ export function ProductGrid({ initialProducts, globalDiscount = 0 }: { initialPr
         initial="hidden"
         animate="show"
         layout 
-        style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '2rem' }}
+        className="product-grid"
       >
         <AnimatePresence>
           {filteredProducts.map(product => {
@@ -106,7 +106,7 @@ export function ProductGrid({ initialProducts, globalDiscount = 0 }: { initialPr
                 whileHover={product.stock > 0 ? { y: -5, boxShadow: 'var(--shadow-glow)' } : {}}
                 transition={{ duration: 0.2 }}
                 onClick={() => product.stock > 0 && setSelectedProduct(product)}
-                className="glass-panel"
+                className="glass-panel product-card"
                 style={{ padding: '1.5rem', borderRadius: '1rem', display: 'flex', flexDirection: 'column', cursor: product.stock > 0 ? 'pointer' : 'not-allowed', position: 'relative', opacity: product.stock === 0 ? 0.5 : 1 }}
               >
                 {product.stock === 0 && (
@@ -124,7 +124,7 @@ export function ProductGrid({ initialProducts, globalDiscount = 0 }: { initialPr
                     {globalDiscount}% OFF
                   </div>
                 )}
-                <div style={{ height: '150px', background: 'var(--surface-hover)', borderRadius: '0.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                <div className="product-card-image-container" style={{ height: '150px', background: 'var(--surface-hover)', borderRadius: '0.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                   {product.imagePath ? (
                     <img src={product.imagePath} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
@@ -135,7 +135,7 @@ export function ProductGrid({ initialProducts, globalDiscount = 0 }: { initialPr
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>{product.type}</p>
                 
                 <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
+                  <div className="product-card-price">
                     {globalDiscount > 0 ? (
                       <>
                         <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '0.9rem', marginRight: '0.5rem' }}>₹{product.price.toFixed(2)}</span>
@@ -164,7 +164,7 @@ export function ProductGrid({ initialProducts, globalDiscount = 0 }: { initialPr
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
-                style={{ background: 'var(--bg-color)', borderRadius: '1.5rem', padding: '2rem', width: '100%', maxWidth: '500px', position: 'relative', boxShadow: 'var(--shadow-glow-strong)', border: '1px solid var(--border)' }}
+                className="modal-card"
               >
                 <button onClick={() => setSelectedProduct(null)} style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'transparent', color: 'var(--text-muted)' }}>
                   <X size={24} />
