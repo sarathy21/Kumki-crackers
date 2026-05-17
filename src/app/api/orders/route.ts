@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { revalidatePath } from 'next/cache'
 
 const prisma = new PrismaClient()
 
@@ -64,6 +65,11 @@ export async function POST(request: Request) {
         data: { stock: { decrement: item.quantity } }
       })
     }
+
+    revalidatePath('/admin/dashboard/orders')
+    revalidatePath('/admin/dashboard')
+    revalidatePath('/products')
+    revalidatePath('/')
 
     return NextResponse.json({ success: true, orderId: order.id })
   } catch (error) {

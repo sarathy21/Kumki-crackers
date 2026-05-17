@@ -99,7 +99,7 @@ export default function CartPage() {
 
   if (!mounted) return null
 
-  const upiId = 'spsarathy0858-1@okaxis'
+  const upiId = 'ravikrishnan1990m@oksbi'
   const payeeName = encodeURIComponent('sarathy s')
   const amount = getTotal().toFixed(2)
   const upiLink = `upi://pay?pa=${upiId}&pn=${payeeName}&am=${amount}&cu=INR`

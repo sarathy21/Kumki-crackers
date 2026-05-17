@@ -1,6 +1,8 @@
 import { PrismaClient } from '@prisma/client'
 import { AdminProductManager } from './AdminProductManager'
 
+export const dynamic = 'force-dynamic'
+
 const prisma = new PrismaClient()
 
 export default async function AdminProducts() {

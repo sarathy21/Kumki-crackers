@@ -16,14 +16,9 @@ export async function addProduct(formData: FormData) {
   let imagePath: string | null = null
   
   if (imageFile && imageFile.size > 0) {
-    const fs = require('fs/promises')
-    const path = require('path')
     const buffer = Buffer.from(await imageFile.arrayBuffer())
-    const filename = `${Date.now()}-${imageFile.name.replace(/[^a-zA-Z0-9.-]/g, '')}`
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads')
-    await fs.mkdir(uploadDir, { recursive: true })
-    await fs.writeFile(path.join(uploadDir, filename), buffer)
-    imagePath = `/uploads/${filename}`
+    const mimeType = imageFile.type || 'image/jpeg'
+    imagePath = `data:${mimeType};base64,${buffer.toString('base64')}`
   }
 
   if (name && price && type) {
@@ -48,14 +43,9 @@ export async function editProduct(formData: FormData) {
   let imagePath: string | null = null
   
   if (imageFile && imageFile.size > 0) {
-    const fs = require('fs/promises')
-    const path = require('path')
     const buffer = Buffer.from(await imageFile.arrayBuffer())
-    const filename = `${Date.now()}-${imageFile.name.replace(/[^a-zA-Z0-9.-]/g, '')}`
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads')
-    await fs.mkdir(uploadDir, { recursive: true })
-    await fs.writeFile(path.join(uploadDir, filename), buffer)
-    imagePath = `/uploads/${filename}`
+    const mimeType = imageFile.type || 'image/jpeg'
+    imagePath = `data:${mimeType};base64,${buffer.toString('base64')}`
   }
 
   if (id && name && price && type) {
@@ -82,17 +72,13 @@ export async function addHeroSlide(formData: FormData) {
   const imageFile = formData.get('imageFile') as File
   if (!imageFile || imageFile.size === 0) return
 
-  const fs = require('fs/promises')
-  const path = require('path')
   const buffer = Buffer.from(await imageFile.arrayBuffer())
-  const filename = `hero-${Date.now()}-${imageFile.name.replace(/[^a-zA-Z0-9.-]/g, '')}`
-  const uploadDir = path.join(process.cwd(), 'public', 'uploads')
-  await fs.mkdir(uploadDir, { recursive: true })
-  await fs.writeFile(path.join(uploadDir, filename), buffer)
+  const mimeType = imageFile.type || 'image/jpeg'
+  const base64Image = `data:${mimeType};base64,${buffer.toString('base64')}`
   
   const count = await prisma.heroSlide.count()
   await prisma.heroSlide.create({
-    data: { imagePath: `/uploads/${filename}`, sortOrder: count }
+    data: { imagePath: base64Image, sortOrder: count }
   })
   revalidatePath('/')
   revalidatePath('/admin/dashboard')
