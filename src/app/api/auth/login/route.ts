@@ -8,10 +8,10 @@ export async function POST(request: Request) {
   try {
     const { username, password } = await request.json()
 
-    // For first time setup, if no admin exists, create one with username 'admin' and password 'admin123'
+    // For first time setup, if no admin exists, create one with username 'admin' and password 'kumki123'
     const adminCount = await prisma.admin.count()
     if (adminCount === 0) {
-      const hash = await bcrypt.hash('admin123', 10)
+      const hash = await bcrypt.hash('kumki123', 10)
       await prisma.admin.create({
         data: {
           username: 'admin',

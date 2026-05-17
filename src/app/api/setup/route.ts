@@ -10,11 +10,21 @@ export async function GET() {
       where: { username: 'admin' }
     })
 
-    if (existingAdmin) {
-      return NextResponse.json({ message: 'Admin already exists' })
-    }
-
     const passwordHash = await bcrypt.hash('kumki123', 10)
+
+    if (existingAdmin) {
+      await prisma.admin.update({
+        where: { username: 'admin' },
+        data: { passwordHash }
+      })
+      // Ensure global settings exist
+      await prisma.siteSettings.upsert({
+        where: { id: 'global' },
+        create: { id: 'global', globalDiscount: 0 },
+        update: {}
+      })
+      return NextResponse.json({ message: 'Admin password updated to kumki123 successfully' })
+    }
     await prisma.admin.create({
       data: {
         username: 'admin',
