@@ -7,17 +7,17 @@ const prisma = new PrismaClient()
 export async function GET() {
   try {
     const existingAdmin = await prisma.admin.findUnique({
-      where: { username: 'sarathy' }
+      where: { username: 'admin' }
     })
 
     if (existingAdmin) {
       return NextResponse.json({ message: 'Admin already exists' })
     }
 
-    const passwordHash = await bcrypt.hash('sarathy@123', 10)
+    const passwordHash = await bcrypt.hash('kumki123', 10)
     await prisma.admin.create({
       data: {
-        username: 'sarathy',
+        username: 'admin',
         passwordHash
       }
     })
