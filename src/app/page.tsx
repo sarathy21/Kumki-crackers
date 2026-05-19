@@ -18,10 +18,10 @@ export default async function Home() {
   const globalDiscount = settings?.globalDiscount ?? 0
 
   return (
-    <main>
+    <main className="container">
       <PageTransition>
         <div style={{ textAlign: 'center', padding: '4rem 1rem 2rem', position: 'relative', zIndex: 10 }}>
-          <h1 className="glow-text" style={{ fontSize: '3rem', marginBottom: '1rem' }}>
+          <h1 className="glow-text" style={{ fontSize: '2.2rem', marginBottom: '1rem' }}>
             Kumki Crackers
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', maxWidth: '600px', margin: '0 auto' }}>

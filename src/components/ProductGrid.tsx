@@ -62,7 +62,7 @@ export function ProductGrid({ initialProducts, globalDiscount = 0 }: { initialPr
   }
 
   return (
-    <div className="container" style={{ paddingBottom: '4rem' }}>
+    <div style={{ paddingBottom: '4rem' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '3rem' }}>
         <input 
           type="text" 

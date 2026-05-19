@@ -23,7 +23,7 @@ export function HeroSlider({ slides }: { slides: Slide[] }) {
   if (slides.length === 0) return null
 
   return (
-    <div className="container" style={{ marginBottom: '3rem' }}>
+    <div style={{ marginBottom: '3rem' }}>
       <div className="hero-slider-box">
         <AnimatePresence mode="wait">
           <motion.img
