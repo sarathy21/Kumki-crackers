@@ -22,9 +22,9 @@ export function PriceListClient({ priceListPdf, priceListData }: { priceListPdf:
 
   // Filter items based on search and category
   const filteredItems = items.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.pack.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.pack.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
@@ -57,9 +57,9 @@ export function PriceListClient({ priceListPdf, priceListData }: { priceListPdf:
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center' }}>
             {/* Search Input */}
             <div style={{ position: 'relative', flex: '1 1 300px', maxWidth: '500px' }}>
-              <input 
-                type="text" 
-                placeholder="Search by name, pack, or category..." 
+              <input
+                type="text"
+                placeholder="Search by name, pack, or category..."
                 className="input-field"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
@@ -69,7 +69,7 @@ export function PriceListClient({ priceListPdf, priceListData }: { priceListPdf:
             </div>
 
             {/* Download Button */}
-            <button 
+            <button
               onClick={handleDownloadPdf}
               className="btn-primary"
               style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', fontSize: '0.95rem' }}
@@ -118,10 +118,10 @@ export function PriceListClient({ priceListPdf, priceListData }: { priceListPdf:
               </thead>
               <tbody>
                 {filteredItems.map((item, index) => (
-                  <tr 
-                    key={index} 
-                    style={{ 
-                      borderBottom: '1px solid var(--border)', 
+                  <tr
+                    key={index}
+                    style={{
+                      borderBottom: '1px solid var(--border)',
                       background: index % 2 === 0 ? 'transparent' : 'rgba(193, 145, 0, 0.015)',
                       transition: 'background 0.2s ease'
                     }}

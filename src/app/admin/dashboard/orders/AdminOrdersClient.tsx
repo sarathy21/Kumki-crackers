@@ -31,11 +31,42 @@ type Order = {
   items: OrderItem[]
 }
 
-const STATUSES = ['PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED']
-
 export function AdminOrdersClient({ orders }: { orders: Order[] }) {
+  const [activeTab, setActiveTab] = useState<'PENDING' | 'CONFIRMED' | 'DELIVERED' | 'CANCELLED'>('PENDING')
   const [cancellingId, setCancellingId] = useState<string | null>(null)
   const [cancelReason, setCancelReason] = useState('')
+  const [updatingId, setUpdatingId] = useState<string | null>(null)
+
+  const pendingOrders = orders.filter(o => o.status === 'PENDING')
+  const confirmedOrders = orders.filter(o => o.status === 'CONFIRMED')
+  const deliveredOrders = orders.filter(o => o.status === 'DELIVERED' || o.status === 'SHIPPED')
+  const cancelledOrders = orders.filter(o => o.status === 'CANCELLED')
+
+  const handleStatusChange = async (orderId: string, status: string) => {
+    setUpdatingId(orderId)
+    try {
+      const formData = new FormData()
+      formData.append('id', orderId)
+      formData.append('status', status)
+      await updateOrderStatus(formData)
+    } catch (err) {
+      alert("Failed to update status: " + err)
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
+  const getFilteredOrders = () => {
+    switch (activeTab) {
+      case 'PENDING': return pendingOrders
+      case 'CONFIRMED': return confirmedOrders
+      case 'DELIVERED': return deliveredOrders
+      case 'CANCELLED': return cancelledOrders
+      default: return []
+    }
+  }
+
+  const currentTabOrders = getFilteredOrders()
 
   const downloadBill = async (order: Order) => {
     const { default: jsPDF } = await import('jspdf')
@@ -133,37 +164,124 @@ export function AdminOrdersClient({ orders }: { orders: Order[] }) {
 
   return (
     <div>
-      <h2 style={{ marginBottom: '2rem' }}>Orders Management</h2>
+      <h2 style={{ marginBottom: '1.5rem', color: 'var(--primary)' }}>Orders Management</h2>
+
+      {/* Modern Tabs Bar */}
+      <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '2px solid var(--border)', marginBottom: '2rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+        {[
+          { key: 'PENDING', label: 'Pending Orders', count: pendingOrders.length, color: 'var(--secondary)' },
+          { key: 'CONFIRMED', label: 'Confirmed Orders', count: confirmedOrders.length, color: 'var(--primary)' },
+          { key: 'DELIVERED', label: 'Delivered / Shipped', count: deliveredOrders.length, color: '#10B981' },
+          { key: 'CANCELLED', label: 'Cancelled Orders', count: cancelledOrders.length, color: '#EF4444' }
+        ].map(tab => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key as any)}
+            style={{
+              padding: '0.75rem 1.25rem',
+              fontWeight: 'bold',
+              fontSize: '0.9rem',
+              borderRadius: '0.5rem 0.5rem 0 0',
+              background: activeTab === tab.key ? 'var(--surface-hover)' : 'transparent',
+              color: activeTab === tab.key ? 'var(--text-main)' : 'var(--text-muted)',
+              border: 'none',
+              borderBottom: activeTab === tab.key ? `3px solid ${tab.color}` : '3px solid transparent',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              whiteSpace: 'nowrap',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            {tab.label}
+            <span style={{
+              background: activeTab === tab.key ? tab.color : 'rgba(122, 101, 48, 0.15)',
+              color: activeTab === tab.key ? '#fff' : 'var(--text-muted)',
+              borderRadius: '50%',
+              width: '20px',
+              height: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '0.75rem'
+            }}>
+              {tab.count}
+            </span>
+          </button>
+        ))}
+      </div>
       
-      {orders.length === 0 ? (
-        <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>No orders yet.</div>
+      {currentTabOrders.length === 0 ? (
+        <div style={{ padding: '4rem 2rem', textAlign: 'center', color: 'var(--text-muted)', background: 'var(--surface)', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+          No orders in this section.
+        </div>
       ) : (
-        orders.map(order => (
-          <div key={order.id} style={{ background: 'var(--surface)', borderRadius: '0.75rem', marginBottom: '1.5rem', border: '1px solid var(--border)', overflow: 'hidden' }}>
+        currentTabOrders.map(order => (
+          <div key={order.id} style={{ background: 'var(--surface)', borderRadius: '0.75rem', marginBottom: '1.5rem', border: '1px solid var(--border)', overflow: 'hidden', boxShadow: 'var(--shadow-glow)' }}>
             {/* Order header */}
             <div style={{ padding: '1rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', borderBottom: '1px solid var(--border)', background: 'var(--surface-hover)' }}>
               <div>
                 <strong>#{order.id.slice(-6).toUpperCase()}</strong>
                 <span style={{ color: 'var(--text-muted)', marginLeft: '1rem', fontSize: '0.85rem' }}>
-                  {new Date(order.createdAt).toLocaleDateString('en-IN')}
+                  {new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                <form action={updateOrderStatus} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                  <input type="hidden" name="id" value={order.id} />
-                  <select name="status" defaultValue={order.status} className="input-field" style={{ width: 'auto', padding: '0.4rem 0.5rem', fontSize: '0.85rem' }}>
-                    {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                  <button type="submit" className="btn-primary" style={{ padding: '0.4rem 0.75rem', fontSize: '0.85rem' }}>Update</button>
-                </form>
-                {order.status !== 'CANCELLED' && (
-                  <button onClick={() => setCancellingId(order.id)} style={{ padding: '0.4rem 0.75rem', fontSize: '0.85rem', background: '#DC2626', color: '#fff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                    <XCircle size={14} /> Cancel
-                  </button>
+              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                {updatingId === order.id ? (
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Updating...</span>
+                ) : (
+                  <>
+                    {/* Status Action Buttons */}
+                    {order.status === 'PENDING' && (
+                      <>
+                        <button 
+                          onClick={() => handleStatusChange(order.id, 'CONFIRMED')} 
+                          className="btn-primary" 
+                          style={{ padding: '0.4rem 0.75rem', fontSize: '0.85rem', background: '#10B981', boxShadow: 'none' }}
+                        >
+                          Confirm Order
+                        </button>
+                        <button 
+                          onClick={() => setCancellingId(order.id)} 
+                          style={{ padding: '0.4rem 0.75rem', fontSize: '0.85rem', background: '#EF4444', color: '#fff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                        >
+                          <XCircle size={14} /> Cancel
+                        </button>
+                      </>
+                    )}
+
+                    {order.status === 'CONFIRMED' && (
+                      <>
+                        <button 
+                          onClick={() => handleStatusChange(order.id, 'DELIVERED')} 
+                          className="btn-primary" 
+                          style={{ padding: '0.4rem 0.75rem', fontSize: '0.85rem', background: '#3B82F6', boxShadow: 'none' }}
+                        >
+                          Mark Delivered
+                        </button>
+                        <button 
+                          onClick={() => setCancellingId(order.id)} 
+                          style={{ padding: '0.4rem 0.75rem', fontSize: '0.85rem', background: '#EF4444', color: '#fff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                        >
+                          <XCircle size={14} /> Cancel
+                        </button>
+                      </>
+                    )}
+
+                    {(order.status === 'DELIVERED' || order.status === 'SHIPPED') && (
+                      <span style={{ padding: '0.3rem 0.75rem', fontSize: '0.8rem', background: 'rgba(16, 185, 129, 0.15)', color: '#10B981', borderRadius: '0.5rem', fontWeight: 'bold' }}>
+                        ✓ DELIVERED
+                      </span>
+                    )}
+
+                    {order.status === 'CANCELLED' && (
+                      <span style={{ padding: '0.3rem 0.75rem', fontSize: '0.8rem', background: 'rgba(239, 68, 68, 0.15)', color: '#EF4444', borderRadius: '0.5rem', fontWeight: 'bold' }}>
+                        ✕ CANCELLED
+                      </span>
+                    )}
+                  </>
                 )}
-                {order.status === 'CANCELLED' && (
-                  <span style={{ padding: '0.4rem 0.75rem', fontSize: '0.85rem', background: '#DC262620', color: '#DC2626', borderRadius: '0.5rem', fontWeight: 600 }}>CANCELLED</span>
-                )}
+
                 <button onClick={() => downloadBill(order)} className="btn-outline" style={{ padding: '0.4rem 0.75rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                   <Download size={14} /> Bill
                 </button>
@@ -171,13 +289,13 @@ export function AdminOrdersClient({ orders }: { orders: Order[] }) {
             </div>
             
             {/* Customer info */}
-            <div style={{ padding: '1rem 1.5rem', fontSize: '0.9rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.5rem', borderBottom: '1px solid var(--border)' }}>
+            <div style={{ padding: '1rem 1.5rem', fontSize: '0.9rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem', borderBottom: '1px solid var(--border)' }}>
               <div><strong>Name:</strong> {order.fullName}</div>
               <div><strong>Phone:</strong> {order.phoneNumber}</div>
               <div><strong>Address:</strong> {order.areaName}, {order.city}, {order.district} - {order.pinCode}</div>
               <div>
-                <strong>Payment:</strong> {order.paymentMethod} ({order.paymentStatus})
-                {order.utrNumber && <span style={{ display: 'block', fontSize: '0.8rem', marginTop: '0.25rem', background: 'var(--surface-hover)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem' }}>UTR: {order.utrNumber}</span>}
+                <strong>Payment:</strong> <span style={{ textTransform: 'uppercase', fontWeight: 'bold', color: order.paymentMethod === 'UPI' ? 'var(--primary)' : 'var(--text-main)' }}>{order.paymentMethod}</span> ({order.paymentStatus})
+                {order.utrNumber && <span style={{ display: 'block', fontSize: '0.8rem', marginTop: '0.25rem', background: 'var(--surface-hover)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', wordBreak: 'break-all' }}>UTR: {order.utrNumber}</span>}
               </div>
             </div>
             
@@ -203,12 +321,14 @@ export function AdminOrdersClient({ orders }: { orders: Order[] }) {
               </tbody>
             </table>
             
-            <div style={{ padding: '1rem 1.5rem', textAlign: 'right', background: 'var(--surface-hover)' }}>
-              {order.cancelReason && (
-                <div style={{ textAlign: 'left', marginBottom: '0.5rem', fontSize: '0.85rem', color: '#DC2626' }}>
-                  <strong>Cancel Reason:</strong> {order.cancelReason}
-                </div>
-              )}
+            <div style={{ padding: '1rem 1.5rem', textAlign: 'right', background: 'var(--surface-hover)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                {order.cancelReason && (
+                  <div style={{ textAlign: 'left', fontSize: '0.85rem', color: '#EF4444' }}>
+                    <strong>Cancel Reason:</strong> {order.cancelReason}
+                  </div>
+                )}
+              </div>
               <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--primary)' }}>Total: ₹{order.totalAmount.toFixed(2)}</span>
             </div>
           </div>
@@ -219,7 +339,7 @@ export function AdminOrdersClient({ orders }: { orders: Order[] }) {
       {cancellingId && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div style={{ background: 'var(--bg-color)', padding: '2rem', borderRadius: '1rem', maxWidth: '400px', width: '100%', border: '1px solid var(--border)' }}>
-            <h3 style={{ marginBottom: '1rem', color: '#DC2626' }}>Cancel Order</h3>
+            <h3 style={{ marginBottom: '1rem', color: '#EF4444' }}>Cancel Order</h3>
             <p style={{ color: 'var(--text-muted)', marginBottom: '1rem', fontSize: '0.9rem' }}>Please provide a reason for cancellation:</p>
             <form action={async (formData: FormData) => {
               await cancelOrder(formData)
@@ -241,7 +361,7 @@ export function AdminOrdersClient({ orders }: { orders: Order[] }) {
                 <button type="button" onClick={() => { setCancellingId(null); setCancelReason('') }} className="btn-outline" style={{ padding: '0.5rem 1rem' }}>
                   Go Back
                 </button>
-                <button type="submit" style={{ padding: '0.5rem 1rem', background: '#DC2626', color: '#fff', borderRadius: '0.5rem', fontWeight: 600 }}>
+                <button type="submit" style={{ padding: '0.5rem 1rem', background: '#EF4444', color: '#fff', borderRadius: '0.5rem', fontWeight: 600 }}>
                   Confirm Cancel
                 </button>
               </div>

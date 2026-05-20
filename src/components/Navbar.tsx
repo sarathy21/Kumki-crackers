@@ -8,8 +8,8 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   
-  const getItemCount = useCartStore((state) => state.getItemCount)
-  const cartCount = getItemCount()
+  const items = useCartStore((state) => state.items)
+  const cartCount = items.reduce((count, item) => count + item.quantity, 0)
 
   useEffect(() => {
     setMounted(true)
