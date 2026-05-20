@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Plus, Trash2, Edit, X, Image, Percent, FileText, Upload, Check, Save } from 'lucide-react'
-import { addProduct, editProduct, deleteProduct, addHeroSlide, deleteHeroSlide, updateGlobalDiscount, updatePriceList } from './actions'
+import { addProduct, editProduct, deleteProduct, addHeroSlide, deleteHeroSlide, updateGlobalDiscount, updatePriceList, clearPriceListPdf, appendPriceListChunk } from './actions'
 
 type Product = {
   id: string
@@ -245,9 +245,21 @@ export function AdminProductManager({
   const handleSavePriceList = async () => {
     setSaveLoading(true);
     try {
-      const res = await updatePriceList(pdfBase64, JSON.stringify(priceListItems));
+      if (pdfBase64) {
+        // Clear old PDF
+        await clearPriceListPdf();
+        // Chunk upload (2MB chunks to bypass 4.5MB Vercel serverless limit)
+        const chunkSize = 2 * 1024 * 1024;
+        for (let i = 0; i < pdfBase64.length; i += chunkSize) {
+          const chunk = pdfBase64.slice(i, i + chunkSize);
+          const chunkRes = await appendPriceListChunk(chunk);
+          if (!chunkRes.success) throw new Error(chunkRes.error);
+        }
+      }
+
+      const res = await updatePriceList(JSON.stringify(priceListItems));
       if (res && !res.success) {
-        alert('Failed to save price list: ' + res.error);
+        alert('Failed to save price list data: ' + res.error);
       } else {
         alert('Price list saved successfully!');
         setNewPdfFile(null);

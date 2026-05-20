@@ -144,12 +144,9 @@ export async function updateGlobalDiscount(formData: FormData) {
   revalidatePath('/admin/dashboard')
 }
 
-export async function updatePriceList(pdfBase64: string | null, priceListData: string) {
+export async function updatePriceList(priceListData: string) {
   try {
     const updateData: any = { priceListData }
-    if (pdfBase64) {
-      updateData.priceListPdf = pdfBase64
-    }
 
     await prisma.siteSettings.upsert({
       where: { id: 'global' },
@@ -162,6 +159,34 @@ export async function updatePriceList(pdfBase64: string | null, priceListData: s
     return { success: true }
   } catch (err: any) {
     console.error("Error in updatePriceList Server Action:", err)
+    return { success: false, error: err?.message || "Unknown database error" }
+  }
+}
+
+export async function clearPriceListPdf() {
+  try {
+    await prisma.siteSettings.upsert({
+      where: { id: 'global' },
+      create: { id: 'global', priceListPdf: '' },
+      update: { priceListPdf: '' }
+    })
+    return { success: true }
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Unknown database error" }
+  }
+}
+
+export async function appendPriceListChunk(chunk: string) {
+  try {
+    const settings = await prisma.siteSettings.findUnique({ where: { id: 'global' } });
+    if (settings) {
+      await prisma.siteSettings.update({
+        where: { id: 'global' },
+        data: { priceListPdf: (settings.priceListPdf || '') + chunk }
+      });
+    }
+    return { success: true }
+  } catch (err: any) {
     return { success: false, error: err?.message || "Unknown database error" }
   }
 }
