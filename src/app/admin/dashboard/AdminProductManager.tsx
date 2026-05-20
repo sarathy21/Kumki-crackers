@@ -185,6 +185,7 @@ export function AdminProductManager({
   const initialItems = priceListData ? JSON.parse(priceListData) : [];
   const [priceListItems, setPriceListItems] = useState<any[]>(initialItems);
   const [newPdfFile, setNewPdfFile] = useState<File | null>(null);
+  const [pdfBase64, setPdfBase64] = useState<string | null>(null);
   const [pdfParsing, setPdfParsing] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
 
@@ -215,6 +216,13 @@ export function AdminProductManager({
     const file = e.target.files?.[0];
     if (!file) return;
     setNewPdfFile(file);
+
+    // Convert to base64 client-side
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPdfBase64(reader.result as string);
+    };
+    reader.readAsDataURL(file);
     
     setPdfParsing(true);
     try {
@@ -237,16 +245,16 @@ export function AdminProductManager({
   const handleSavePriceList = async () => {
     setSaveLoading(true);
     try {
-      const formData = new FormData();
-      if (newPdfFile) {
-        formData.append('pdfFile', newPdfFile);
+      const res = await updatePriceList(pdfBase64, JSON.stringify(priceListItems));
+      if (res && !res.success) {
+        alert('Failed to save price list: ' + res.error);
+      } else {
+        alert('Price list saved successfully!');
+        setNewPdfFile(null);
+        setPdfBase64(null);
       }
-      formData.append('priceListData', JSON.stringify(priceListItems));
-      await updatePriceList(formData);
-      alert('Price list saved successfully!');
-      setNewPdfFile(null);
-    } catch (err) {
-      alert('Failed to save price list: ' + err);
+    } catch (err: any) {
+      alert('Failed to save price list: ' + (err?.message || err));
     } finally {
       setSaveLoading(false);
     }
