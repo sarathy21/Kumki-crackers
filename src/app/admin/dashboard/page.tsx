@@ -19,6 +19,8 @@ export default async function AdminProducts() {
   })
 
   const globalDiscount = settings?.globalDiscount ?? 0
+  const priceListPdf = settings?.priceListPdf ?? null
+  const priceListData = settings?.priceListData ?? null
 
   // Monthly stats
   const now = new Date()
@@ -35,5 +37,14 @@ export default async function AdminProducts() {
     pendingOrders: monthlyOrders.filter(o => o.status === 'PENDING').length
   }
 
-  return <AdminProductManager products={products} heroSlides={heroSlides} stats={stats} globalDiscount={globalDiscount} />
+  return (
+    <AdminProductManager 
+      products={products} 
+      heroSlides={heroSlides} 
+      stats={stats} 
+      globalDiscount={globalDiscount} 
+      priceListPdf={priceListPdf}
+      priceListData={priceListData}
+    />
+  )
 }

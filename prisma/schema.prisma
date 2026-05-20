@@ -63,6 +63,8 @@ model SiteSettings {
   id              String   @id @default("global")
   heroImage       String?
   globalDiscount  Int      @default(0)
+  priceListPdf    String?  // Base64 representation of the uploaded price list PDF
+  priceListData   String?  // JSON stringified price list table data
   updatedAt       DateTime @updatedAt
 }
 

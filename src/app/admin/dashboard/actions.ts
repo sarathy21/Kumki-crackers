@@ -143,3 +143,30 @@ export async function updateGlobalDiscount(formData: FormData) {
   revalidatePath('/products')
   revalidatePath('/admin/dashboard')
 }
+
+export async function updatePriceList(formData: FormData) {
+  const pdfFile = formData.get('pdfFile') as File | null
+  const priceListData = formData.get('priceListData') as string // JSON array of items
+  
+  let priceListPdf: string | null = null
+  
+  if (pdfFile && pdfFile.size > 0) {
+    const buffer = Buffer.from(await pdfFile.arrayBuffer())
+    const mimeType = pdfFile.type || 'application/pdf'
+    priceListPdf = `data:${mimeType};base64,${buffer.toString('base64')}`
+  }
+
+  const updateData: any = { priceListData }
+  if (priceListPdf) {
+    updateData.priceListPdf = priceListPdf
+  }
+
+  await prisma.siteSettings.upsert({
+    where: { id: 'global' },
+    create: { id: 'global', ...updateData },
+    update: updateData
+  })
+
+  revalidatePath('/price-list')
+  revalidatePath('/admin/dashboard')
+}
