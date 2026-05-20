@@ -113,9 +113,9 @@ export function AdminOrdersClient({ orders }: { orders: Order[] }) {
     let y = 99
     doc.setFont('helvetica', 'bold')
     doc.text('S.No', 15, y)
-    doc.text('Item', 30, y)
-    doc.text('Qty', 120, y)
-    doc.text('Price', 140, y)
+    doc.text('Item Name', 30, y)
+    doc.text('Qty', 120, y, { align: 'center' })
+    doc.text('Price', 155, y, { align: 'right' })
     doc.text('Total', pageWidth - 15, y, { align: 'right' })
     
     doc.line(15, y + 3, pageWidth - 15, y + 3)
@@ -124,15 +124,41 @@ export function AdminOrdersClient({ orders }: { orders: Order[] }) {
     // Table rows
     doc.setFont('helvetica', 'normal')
     order.items.forEach((item, idx) => {
+      // Check for page overflow
+      if (y > 270) {
+        doc.addPage()
+        y = 20
+        // Redraw table headers on new page
+        doc.setFont('helvetica', 'bold')
+        doc.text('S.No', 15, y)
+        doc.text('Item Name', 30, y)
+        doc.text('Qty', 120, y, { align: 'center' })
+        doc.text('Price', 155, y, { align: 'right' })
+        doc.text('Total', pageWidth - 15, y, { align: 'right' })
+        doc.line(15, y + 3, pageWidth - 15, y + 3)
+        y += 10
+        doc.setFont('helvetica', 'normal')
+      }
+
       const total = item.price * item.quantity
+      // Handle potential long product names to avoid wrapping overflow manually
+      const name = item.productName || '—'
+      const truncatedName = name.length > 45 ? name.substring(0, 42) + '...' : name
+
       doc.text(`${idx + 1}`, 15, y)
-      doc.text(item.productName || '—', 30, y)
-      doc.text(`${item.quantity}`, 120, y)
-      doc.text(`₹${item.price.toFixed(2)}`, 140, y)
-      doc.text(`₹${total.toFixed(2)}`, pageWidth - 15, y, { align: 'right' })
+      doc.text(truncatedName, 30, y)
+      doc.text(`${item.quantity}`, 120, y, { align: 'center' })
+      doc.text(`Rs. ${item.price.toFixed(2)}`, 155, y, { align: 'right' })
+      doc.text(`Rs. ${total.toFixed(2)}`, pageWidth - 15, y, { align: 'right' })
       y += 8
     })
     
+    // Check if we need a new page for totals and footer
+    if (y > 240) {
+      doc.addPage()
+      y = 20
+    }
+
     // Line
     doc.line(15, y, pageWidth - 15, y)
     y += 8
@@ -140,7 +166,7 @@ export function AdminOrdersClient({ orders }: { orders: Order[] }) {
     // Total
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(11)
-    doc.text(`Grand Total: ₹${order.totalAmount.toFixed(2)}`, pageWidth - 15, y, { align: 'right' })
+    doc.text(`Grand Total: Rs. ${order.totalAmount.toFixed(2)}`, pageWidth - 15, y, { align: 'right' })
     y += 10
     
     // Payment info
@@ -149,10 +175,15 @@ export function AdminOrdersClient({ orders }: { orders: Order[] }) {
     doc.text(`Payment: ${order.paymentMethod}`, 15, y)
     if (order.utrNumber) {
       doc.text(`Ref ID: ${order.utrNumber}`, 15, y + 6)
+      y += 6
     }
     
     // Footer
     y += 20
+    if (y > 275) {
+      doc.addPage()
+      y = 20
+    }
     doc.setDrawColor(193, 145, 0)
     doc.line(15, y, pageWidth - 15, y)
     y += 8
