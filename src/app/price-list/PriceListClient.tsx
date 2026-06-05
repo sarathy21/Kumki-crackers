@@ -31,8 +31,8 @@ export function PriceListClient({ priceListPdf, priceListData }: { priceListPdf:
 
   const handleDownloadPdf = () => {
     const link = document.createElement('a');
-    if (priceListPdf) {
-      link.href = priceListPdf;
+    if (priceListPdf === 'exists') {
+      link.href = '/api/price-list/pdf';
     } else {
       link.href = '/Kumki-Cracker-Price-List.pdf';
     }

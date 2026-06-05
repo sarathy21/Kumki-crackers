@@ -14,11 +14,12 @@ export default async function AdminProducts() {
   })
 
   const settings = await prisma.siteSettings.findUnique({
-    where: { id: 'global' }
+    where: { id: 'global' },
+    select: { globalDiscount: true, priceListData: true, priceListPdf: true }
   })
 
   const globalDiscount = settings?.globalDiscount ?? 0
-  const priceListPdf = settings?.priceListPdf ?? null
+  const priceListPdf = settings?.priceListPdf ? 'exists' : null
   const priceListData = settings?.priceListData ?? null
 
   // Monthly stats
