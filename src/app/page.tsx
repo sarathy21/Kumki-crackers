@@ -1,9 +1,9 @@
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import { ProductGrid } from '@/components/ProductGrid'
 import { HeroSlider } from '@/components/HeroSlider'
 import { PageTransition } from '@/components/PageTransition'
 
-const prisma = new PrismaClient()
+export const revalidate = 60
 
 export default async function Home() {
   const products = await prisma.product.findMany({

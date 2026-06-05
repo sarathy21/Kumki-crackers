@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ShoppingCart, X } from 'lucide-react'
 import { useCartStore } from '@/store/cartStore'
@@ -34,6 +35,7 @@ export function ProductGrid({ initialProducts, globalDiscount = 0 }: { initialPr
   const [filter, setFilter] = useState('All')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [visibleCount, setVisibleCount] = useState(16)
   const addItem = useCartStore(state => state.addItem)
 
   const filteredProducts = initialProducts.filter(p => {
@@ -41,6 +43,12 @@ export function ProductGrid({ initialProducts, globalDiscount = 0 }: { initialPr
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase())
     return matchesFilter && matchesSearch
   })
+
+  useEffect(() => {
+    setVisibleCount(16)
+  }, [filter, searchQuery])
+
+  const visibleProducts = filteredProducts.slice(0, visibleCount)
 
   useEffect(() => {
     if (selectedProduct) {
@@ -95,7 +103,7 @@ export function ProductGrid({ initialProducts, globalDiscount = 0 }: { initialPr
         className="product-grid"
       >
         <AnimatePresence>
-          {filteredProducts.map(product => {
+          {visibleProducts.map(product => {
             const discountedPrice = getDiscountedPrice(product.price, globalDiscount)
             return (
               <motion.div
@@ -124,11 +132,13 @@ export function ProductGrid({ initialProducts, globalDiscount = 0 }: { initialPr
                     {globalDiscount}% OFF
                   </div>
                 )}
-                <div className="product-card-image-container" style={{ height: '150px', background: 'var(--surface-hover)', borderRadius: '0.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                <div className="product-card-image-container" style={{ height: '150px', background: 'var(--surface-hover)', borderRadius: '0.5rem', marginBottom: '1rem', position: 'relative', overflow: 'hidden' }}>
                   {product.imagePath ? (
-                    <img src={product.imagePath} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <Image src={product.imagePath} alt={product.name} fill sizes="(max-width: 768px) 100vw, 33vw" style={{ objectFit: 'cover' }} />
                   ) : (
-                    <span style={{ color: 'var(--text-muted)' }}>No Image</span>
+                    <div style={{ display: 'flex', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>No Image</span>
+                    </div>
                   )}
                 </div>
                 <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>{product.name}</h3>
@@ -170,11 +180,13 @@ export function ProductGrid({ initialProducts, globalDiscount = 0 }: { initialPr
                   <X size={24} />
                 </button>
                 
-                <div style={{ height: '250px', background: 'var(--surface-hover)', borderRadius: '1rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                <div style={{ height: '250px', background: 'var(--surface-hover)', borderRadius: '1rem', marginBottom: '1.5rem', position: 'relative', overflow: 'hidden' }}>
                   {selectedProduct.imagePath ? (
-                    <img src={selectedProduct.imagePath} alt={selectedProduct.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    <Image src={selectedProduct.imagePath} alt={selectedProduct.name} fill sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: 'contain' }} />
                   ) : (
-                    <span style={{ color: 'var(--text-muted)' }}>No Image Available</span>
+                    <div style={{ display: 'flex', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>No Image Available</span>
+                    </div>
                   )}
                 </div>
 
@@ -213,6 +225,18 @@ export function ProductGrid({ initialProducts, globalDiscount = 0 }: { initialPr
           )
         })()}
       </AnimatePresence>
+
+      {visibleCount < filteredProducts.length && (
+        <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+          <button 
+            onClick={() => setVisibleCount(prev => prev + 16)} 
+            className="btn-outline"
+            style={{ padding: '0.75rem 2rem', fontSize: '1rem', borderRadius: '2rem' }}
+          >
+            Load More Products
+          </button>
+        </div>
+      )}
 
       {filteredProducts.length === 0 && (
         <div style={{ textAlign: 'center', padding: '4rem 0', color: 'var(--text-muted)' }}>

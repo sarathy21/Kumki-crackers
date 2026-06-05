@@ -19,6 +19,9 @@ model Product {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   orderItems  OrderItem[]
+
+  @@index([createdAt])
+  @@index([type])
 }
 
 model Order {

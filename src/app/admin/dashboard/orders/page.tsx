@@ -1,9 +1,8 @@
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import { AdminOrdersClient } from './AdminOrdersClient'
 
 export const dynamic = 'force-dynamic'
 
-const prisma = new PrismaClient()
 
 export default async function AdminOrders() {
   const orders = await prisma.order.findMany({

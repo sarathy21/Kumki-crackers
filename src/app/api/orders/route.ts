@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 
-const prisma = new PrismaClient()
 
 export async function POST(request: Request) {
   try {
@@ -33,38 +32,42 @@ export async function POST(request: Request) {
       }
     }
 
-    const order = await prisma.order.create({
-      data: {
-        fullName,
-        city,
-        district,
-        pinCode,
-        phoneNumber,
-        areaName,
-        totalAmount,
-        discountAmount: discountAmount || 0,
-        paymentMethod,
-        paymentStatus,
-        utrNumber,
-        items: {
-          create: items.map((item: any) => ({
-            productId: item.productId,
-            productName: item.productName || '',
-            quantity: item.quantity,
-            price: item.price,
-            discount: item.discount || 0
-          }))
+    // Create order and reduce stock in a single transaction for atomicity and performance
+    const transactionQueries = [
+      prisma.order.create({
+        data: {
+          fullName,
+          city,
+          district,
+          pinCode,
+          phoneNumber,
+          areaName,
+          totalAmount,
+          discountAmount: discountAmount || 0,
+          paymentMethod,
+          paymentStatus,
+          utrNumber,
+          items: {
+            create: items.map((item: any) => ({
+              productId: item.productId,
+              productName: item.productName || '',
+              quantity: item.quantity,
+              price: item.price,
+              discount: item.discount || 0
+            }))
+          }
         }
-      }
-    })
+      }),
+      ...items.map((item: any) =>
+        prisma.product.update({
+          where: { id: item.productId },
+          data: { stock: { decrement: item.quantity } }
+        })
+      )
+    ]
 
-    // Reduce stock for each ordered item
-    for (const item of items) {
-      await prisma.product.update({
-        where: { id: item.productId },
-        data: { stock: { decrement: item.quantity } }
-      })
-    }
+    const results = await prisma.$transaction(transactionQueries)
+    const order = results[0]
 
     revalidatePath('/admin/dashboard/orders')
     revalidatePath('/admin/dashboard')

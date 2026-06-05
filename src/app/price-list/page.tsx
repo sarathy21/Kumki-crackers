@@ -1,9 +1,7 @@
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import { PriceListClient } from './PriceListClient'
 
-export const dynamic = 'force-dynamic'
-
-const prisma = new PrismaClient()
+export const revalidate = 60
 
 export default async function PriceListPage() {
   const settings = await prisma.siteSettings.findUnique({
