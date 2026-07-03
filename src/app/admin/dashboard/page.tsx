@@ -15,11 +15,11 @@ export default async function AdminProducts() {
 
   const settings = await prisma.siteSettings.findUnique({
     where: { id: 'global' },
-    select: { globalDiscount: true, priceListData: true, priceListPdf: true }
+    select: { globalDiscount: true, priceListData: true } // Exclude Base64 PDF
   })
 
   const globalDiscount = settings?.globalDiscount ?? 0
-  const priceListPdf = settings?.priceListPdf ? 'exists' : null
+  const priceListPdf = null // Disabled PDF check to prevent 28MB SSG crash
   const priceListData = settings?.priceListData ?? null
 
   // Monthly stats

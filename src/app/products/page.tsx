@@ -5,10 +5,14 @@ export const revalidate = 60
 
 export default async function ProductsPage() {
   const products = await prisma.product.findMany({
+    take: 200, // Limit to 200 for SSG to prevent timeout
     orderBy: { createdAt: 'desc' }
   })
 
-  const settings = await prisma.siteSettings.findUnique({ where: { id: 'global' } })
+  const settings = await prisma.siteSettings.findUnique({
+    where: { id: 'global' },
+    select: { globalDiscount: true }
+  })
   const globalDiscount = settings?.globalDiscount ?? 0
 
   return (

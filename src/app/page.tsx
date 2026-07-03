@@ -7,6 +7,7 @@ export const revalidate = 60
 
 export default async function Home() {
   const products = await prisma.product.findMany({
+    take: 16,
     orderBy: { createdAt: 'desc' }
   })
 
@@ -14,7 +15,10 @@ export default async function Home() {
     orderBy: { sortOrder: 'asc' }
   })
 
-  const settings = await prisma.siteSettings.findUnique({ where: { id: 'global' } })
+  const settings = await prisma.siteSettings.findUnique({
+    where: { id: 'global' },
+    select: { globalDiscount: true }
+  })
   const globalDiscount = settings?.globalDiscount ?? 0
 
   return (
